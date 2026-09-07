@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>📊 Análise de Rastreamento</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            color: #1a1a2e;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #fff;
+            padding: 20px 30px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .header h1 span {
+            background: #e94560;
+            font-size: 13px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 400;
+        }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .btn-clear-all {
+            background: #ef4444;
+            color: #fff;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: 0.2s;
+        }
+        .btn-clear-all:hover {
+            background: #dc2626;
+        }
+        .file-count {
+            color: #94a3b8;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 6px 14px;
+            border-radius: 20px;
+        }
+
+        .drop-zone {
+            border: 3px dashed #cbd5e1;
+            border-radius: 16px;
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 24px;
+            background: #f8fafc;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        .drop-zone:hover,
+        .drop-zone.dragover {
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
+        .drop-zone .icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        .drop-zone p {
+            color: #64748b;
+            font-size: 16px;
+        }
+        .drop-zone .sub {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+        .drop-zone input[type="file"] {
+            display: none;
+        }
+        .drop-zone .btn-upload {
+            display: inline-block;
+            background: #2563eb;
+            color: #fff;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-top: 12px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .drop-zone .btn-upload:hover {
+            background: #1d4ed8;
+            transform: scale(1.02);
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .card-item {
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            border-left: 5px solid #2563eb;
+            cursor: pointer;
+            transition: 0.3s;
+            position: relative;
+        }
+        .card-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+        .card-item .file-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .card-item .file-name .badge {
+            font-size: 11px;
+            background: #dcfce7;
+            color: #166534;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-weight: 400;
+        }
+        .card-item .file-name .badge.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .card-item .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .card-item .stat {
+            background: #f8fafc;
+            padding: 8px 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .card-item .stat .label {
+            font-size: 10px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        .card-item .stat .value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-top: 2px;
+        }
+        .card-item .stat .value small {
+            font-size: 11px;
+            font-weight: 400;
+            color: #94a3b8;
+        }
+        .card-item .click-hint {
+            text-align: center;
+            margin-top: 12px;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+        .card-item .click-hint span {
+            background: #eef2f6;
+            padding: 2px 12px;
+            border-radius: 12px;
+        }
+        .card-item.error {
+            border-left-color: #dc2626;
+        }
+        .card-item.loading {
+            border-left-color: #f59e0b;
+            opacity: 0.7;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal {
+            background: #fff;
+            border-radius: 20px;
+            max-width: 950px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 30px;
+            position: relative;
+            animation: modalIn 0.3s ease;
+        }
+        @keyframes modalIn {
+            from {
+                transform: scale(0.95);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        .modal-close {
+            position: sticky;
+            top: 0;
+            float: right;
+            background: #fee2e2;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            color: #dc2626;
+            font-weight: 700;
+            transition: 0.2s;
+            z-index: 10;
+        }
+        .modal-close:hover {
+            background: #fca5a5;
+            transform: rotate(90deg);
+        }
+        .modal h2 {
+            font-size: 22px;
+            margin-bottom: 8px;
+            color: #1a1a2e;
+        }
+        .modal .subtitle {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .modal-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .modal-stat {
+            background: #f8fafc;
+            padding: 14px 16px;
+            border-radius: 12px;
+            text-align: center;
+            border-left: 4px solid #2563eb;
+        }
+        .modal-stat .label {
+            font-size: 11px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        .modal-stat .value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-top: 4px;
+        }
+        .modal-stat .value small {
+            font-size: 13px;
+            font-weight: 400;
+            color: #94a3b8;
+        }
+        .modal-stat .value .time-detail {
+            font-size: 14px;
+            font-weight: 400;
+            color: #64748b;
+            display: block;
+        }
+        .modal-stat.orange {
+            border-left-color: #f59e0b;
+        }
+        .modal-stat.green {
+            border-left-color: #16a34a;
+        }
+        .modal-stat.red {
+            border-left-color: #dc2626;
+        }
+        .modal-stat.purple {
+            border-left-color: #9333ea;
+        }
+        .modal-stat.pink {
+            border-left-color: #ec4899;
+        }
+        .modal-stat.teal {
+            border-left-color: #14b8a6;
+        }
+
+        .modal-section {
+            margin-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 16px;
+        }
+        .modal-section h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #1a1a2e;
+        }
+        .modal-section .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 8px;
+        }
+        .modal-section .detail-item {
+            background: #f8fafc;
+            padding: 8px 12px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+        .modal-section .detail-item .dlabel {
+            color: #64748b;
+        }
+        .modal-section .detail-item .dvalue {
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+        .modal-section .detail-item .dvalue .coord {
+            font-weight: 400;
+            color: #64748b;
+            font-size: 12px;
+        }
+        .modal-section .detail-item.full {
+            grid-column: 1 / -1;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .status-badge.ligado {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .status-badge.desligado {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .location-info {
+            background: #eff6ff;
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin: 6px 0;
+            border-left: 3px solid #2563eb;
+        }
+        .location-info .loc-label {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .location-info .loc-value {
+            font-size: 14px;
+            color: #1a1a2e;
+            font-weight: 500;
+        }
+        .location-info .loc-coord {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+            .modal {
+                padding: 20px;
+                margin: 10px;
+            }
+            .modal-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+            .modal-stat .value {
+                font-size: 17px;
+            }
+            .modal-section .detail-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #94a3b8;
+            padding: 16px 0 8px;
+            border-top: 1px solid #e5e7eb;
+            margin-top: 16px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #94a3b8;
+            grid-column: 1 / -1;
+        }
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>🚛 Análise de Rastreamento <span>v5.1</span></h1>
+            <div class="header-actions">
+                <span class="file-count" id="fileCount">0 arquivos</span>
+                <button class="btn-clear-all" onclick="clearAllFiles()">🗑️ Limpar Todos</button>
+            </div>
+        </div>
+
+        <div class="drop-zone" id="dropZone">
+            <div class="icon">📂</div>
+            <p><strong>Arraste e solte</strong> seus arquivos Excel aqui</p>
+            <p class="sub">ou clique para selecionar</p>
+            <label class="btn-upload" for="fileInput">📤 Selecionar Arquivos</label>
+            <input type="file" id="fileInput" multiple accept=".xlsx,.xls" />
+        </div>
+
+        <div class="cards-grid" id="cardsGrid">
+            <div class="empty-state">
+                <div class="icon">📭</div>
+                <p>Nenhum arquivo carregado</p>
+                <p style="font-size:13px;color:#94a3b8;">Arraste e solte uma planilha para começar</p>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+            <div class="modal" onclick="event.stopPropagation()">
+                <button class="modal-close" onclick="closeModal()">✕</button>
+                <div id="modalContent"></div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Sistema de Análise de Rastreamento • Processamento local • Cálculos 100% baseados nos dados da planilha
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // GLOBALS
+        // ============================================================
+        const fileData = {};
+        let activeModal = null;
+
+        // ============================================================
+        // UTILITÁRIOS
+        // ============================================================
+        function formatDate(d) {
+            if (!d) return '--';
+            const dt = new Date(d);
+            return dt.toLocaleString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+
+        function formatDuration(seconds) {
+            if (!seconds || seconds < 0) return '0s';
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+
+            let parts = [];
+            if (hours > 0) parts.push(`${hours}h`);
+            if (minutes > 0 || hours > 0) parts.push(`${minutes}min`);
+            parts.push(`${secs}s`);
+            return parts.join(' ');
+        }
+
+        function getTimeComponents(seconds) {
+            if (!seconds || seconds < 0) return { hours: 0, minutes: 0, seconds: 0 };
+            return {
+                hours: Math.floor(seconds / 3600),
+                minutes: Math.floor((seconds % 3600) / 60),
+                seconds: Math.floor(seconds % 60)
+            };
+        }
+
+        function parseSpeed(val) {
+            if (val === undefined || val === null) return 0;
+            if (typeof val === 'number') return val;
+            if (typeof val === 'string') {
+                const cleaned = val.replace(' km/h', '').replace(',', '.').trim();
+                const parsed = parseFloat(cleaned);
+                return isNaN(parsed) ? 0 : parsed;
+            }
+            return 0;
+        }
+
+        function parseDateTime(val) {
+            if (!val) return null;
+            let d = new Date(val);
+            if (!isNaN(d)) return d;
+
+            const parts = String(val).trim().match(/(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})/);
+            if (parts) {
+                return new Date(
+                    parseInt(parts[3]),
+                    parseInt(parts[2]) - 1,
+                    parseInt(parts[1]),
+                    parseInt(parts[4]),
+                    parseInt(parts[5]),
+                    parseInt(parts[6])
+                );
+            }
+            return null;
+        }
+
+        function normalizeColumnName(name) {
+            if (!name) return '';
+            return String(name).trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        }
+
+        function findColumn(keys, data) {
+            for (const key of keys) {
+                for (const col of Object.keys(data)) {
+                    if (normalizeColumnName(col) === key) {
+                        return col;
+                    }
+                }
+            }
+            return null;
+        }
+
+        function parseExcelData(workbook) {
+            let sheet = workbook.Sheets['ag-grid'];
+            if (!sheet) {
+                const firstSheetName = workbook.SheetNames[0];
+                if (!firstSheetName) return [];
+                sheet = workbook.Sheets[firstSheetName];
+            }
+            return XLSX.utils.sheet_to_json(sheet, { defval: '' });
+        }
+
+        // ============================================================
+        // ANÁLISE PRINCIPAL
+        // ============================================================
+        function analyzeData(rows, fileName) {
+            if (!rows || rows.length === 0) {
+                return { data: [], summary: {}, error: 'Nenhum dado encontrado' };
+            }
+
+            try {
+                const colMap = {
+                    data: findColumn(['data'], rows[0]),
+                    velocidade: findColumn(['velocidade'], rows[0]),
+                    ignicao: findColumn(['ignicao', 'ignição'], rows[0]),
+                    hodometro: findColumn(['hodômetro', 'hodometro'], rows[0]),
+                    latitude: findColumn(['latitude'], rows[0]),
+                    longitude: findColumn(['longitude'], rows[0]),
+                    endereco: findColumn(['endereço', 'endereco'], rows[0]),
+                    frota: findColumn(['frota'], rows[0]),
+                    placa: findColumn(['placa'], rows[0]),
+                    motorista: findColumn(['motorista'], rows[0]),
+                    evento: findColumn(['teleevento', 'evento'], rows[0]),
+                };
+
+                const processed = [];
+                for (const row of rows) {
+                    const dt = parseDateTime(row[colMap.data]);
+                    if (!dt) continue;
+
+                    const entry = {
+                        raw: row,
+                        data: dt,
+                        velocidade: parseSpeed(row[colMap.velocidade]),
+                        ignicao: String(row[colMap.ignicao] || '').trim(),
+                        hodometro: String(row[colMap.hodometro] || '').trim(),
+                        latitude: parseFloat(row[colMap.latitude]) || 0,
+                        longitude: parseFloat(row[colMap.longitude]) || 0,
+                        endereco: row[colMap.endereco] || '',
+                        frota: row[colMap.frota] || '',
+                        placa: row[colMap.placa] || '',
+                        motorista: row[colMap.motorista] || '',
+                        evento: row[colMap.evento] || '',
+                    };
+
+                    const ign = entry.ignicao.toLowerCase();
+                    if (ign.includes('ligado') || ign.includes('ligada')) {
+                        entry.ignicao = 'Ligado';
+                    } else if (ign.includes('desligado') || ign.includes('desligada')) {
+                        entry.ignicao = 'Desligado';
+                    }
+
+                    processed.push(entry);
+                }
+
+                processed.sort((a, b) => a.data - b.data);
+
+                if (processed.length === 0) {
+                    return { data: [], summary: {}, error: 'Nenhum dado válido encontrado' };
+                }
+
+                const first = processed[0];
+                const last = processed[processed.length - 1];
+
+                // ============================================================
+                // CÁLCULOS
+                // ============================================================
+
+                let stopSeconds = 0;
+                let movingSeconds = 0;
+                let maxSpeed = 0;
+                let speedSum = 0;
+                let speedCount = 0;
+                let totalDistance = 0;
+                let prevHodometro = null;
+
+                let stops = [];
+                let stopStart = null;
+                let stopStartData = null;
+
+                for (let i = 0; i < processed.length; i++) {
+                    const current = processed[i];
+                    const prev = i > 0 ? processed[i - 1] : null;
+
+                    let timeDiff = 0;
+                    if (prev) {
+                        timeDiff = (current.data - prev.data) / 1000;
+                        if (timeDiff > 300) timeDiff = 0;
+                    }
+
+                    if (timeDiff > 0) {
+                        if (current.velocidade === 0) {
+                            stopSeconds += timeDiff;
+                            if (stopStart === null) {
+                                stopStart = prev.data;
+                                stopStartData = prev;
+                            }
+                        } else {
+                            movingSeconds += timeDiff;
+                            if (stopStart !== null) {
+                                const duration = (prev.data - stopStart) / 1000;
+                                if (duration > 10) {
+                                    stops.push({
+                                        inicio: stopStart,
+                                        fim: prev.data,
+                                        duracaoSeg: duration,
+                                        kmInicial: stopStartData?.hodometro || '--',
+                                        kmFinal: prev.hodometro || '--'
+                                    });
+                                }
+                                stopStart = null;
+                                stopStartData = null;
+                            }
+                        }
+                    }
+
+                    if (current.velocidade > maxSpeed) {
+                        maxSpeed = current.velocidade;
+                    }
+
+                    if (current.velocidade > 0) {
+                        speedSum += current.velocidade;
+                        speedCount++;
+                    }
+
+                    if (current.hodometro) {
+                        const kmStr = String(current.hodometro)
+                            .replace(' km', '')
+                            .replace(' e', '.')
+                            .replace(' m', '')
+                            .trim();
+                        const km = parseFloat(kmStr);
+                        if (!isNaN(km) && km > 0) {
+                            if (prevHodometro !== null && km > prevHodometro) {
+                                totalDistance += (km - prevHodometro);
+                            }
+                            prevHodometro = km;
+                        }
+                    }
+                }
+
+                if (stopStart !== null) {
+                    const lastP = processed[processed.length - 1];
+                    const duration = (lastP.data - stopStart) / 1000;
+                    if (duration > 10) {
+                        stops.push({
+                            inicio: stopStart,
+                            fim: lastP.data,
+                            duracaoSeg: duration,
+                            kmInicial: stopStartData?.hodometro || '--',
+                            kmFinal: lastP.hodometro || '--'
+                        });
+                    }
+                }
+
+                const jornadaSegundos = (last.data - first.data) / 1000;
+                const avgSpeed = speedCount > 0 ? speedSum / speedCount : 0;
+
+                // ============================================================
+                // LOCALIZAÇÃO DE INÍCIO E FIM
+                // ============================================================
+                const inicioLocalizacao = {
+                    data: first.data,
+                    latitude: first.latitude,
+                    longitude: first.longitude,
+                    endereco: first.endereco,
+                    velocidade: first.velocidade,
+                    ignicao: first.ignicao,
+                    evento: first.evento,
+                    hodometro: first.hodometro
+                };
+
+                const fimLocalizacao = {
+                    data: last.data,
+                    latitude: last.latitude,
+                    longitude: last.longitude,
+                    endereco: last.endereco,
+                    velocidade: last.velocidade,
+                    ignicao: last.ignicao,
+                    evento: last.evento,
+                    hodometro: last.hodometro
+                };
+
+                // ============================================================
+                // RESUMO
+                // ============================================================
+                const summary = {
+                    fileName: fileName,
+                    totalEvents: processed.length,
+                    frota: last.frota || first.frota || '--',
+                    placa: last.placa || first.placa || '--',
+                    motorista: last.motorista || first.motorista || '--',
+
+                    jornadaInicio: first.data,
+                    jornadaFim: last.data,
+                    jornadaSegundos: jornadaSegundos,
+
+                    stopSeconds: stopSeconds,
+                    movingSeconds: movingSeconds,
+
+                    maxSpeed: maxSpeed,
+                    avgSpeed: avgSpeed,
+
+                    totalDistance: totalDistance,
+
+                    // LOCALIZAÇÃO DE INÍCIO E FIM
+                    inicioLocalizacao: inicioLocalizacao,
+                    fimLocalizacao: fimLocalizacao,
+
+                    lastEvent: {
+                        data: last.data,
+                        velocidade: last.velocidade,
+                        ignicao: last.ignicao,
+                        latitude: last.latitude,
+                        longitude: last.longitude,
+                        endereco: last.endereco,
+                        evento: last.evento,
+                        hodometro: last.hodometro
+                    },
+
+                    stops: stops,
+                    totalStops: stops.length,
+                };
+
+                return { data: processed, summary: summary };
+
+            } catch (err) {
+                return { data: [], summary: {}, error: err.message };
+            }
+        }
+
+        // ============================================================
+        // RENDER
+        // ============================================================
+        function renderCards() {
+            const grid = document.getElementById('cardsGrid');
+            const names = Object.keys(fileData);
+
+            if (names.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <p>Nenhum arquivo carregado</p>
+                        <p style="font-size:13px;color:#94a3b8;">Arraste e solte uma planilha para começar</p>
+                    </div>
+                `;
+                document.getElementById('fileCount').textContent = '0 arquivos';
+                return;
+            }
+
+            document.getElementById('fileCount').textContent = `${names.length} arquivo${names.length > 1 ? 's' : ''}`;
+
+            let html = '';
+            for (const name of names) {
+                const data = fileData[name];
+                const hasError = data && data.error;
+                const s = data?.summary;
+
+                if (hasError) {
+                    html += `
+                        <div class="card-item error" onclick="openModal('${name}')">
+                            <div class="file-name">
+                                📄 ${name.length > 30 ? name.substring(0, 27) + '...' : name}
+                                <span class="badge error">⚠️ Erro</span>
+                            </div>
+                            <div style="color:#dc2626;font-size:14px;text-align:center;padding:20px 0;">
+                                ${data.error}
+                            </div>
+                            <div class="click-hint"><span>👆 Clique para detalhes</span></div>
+                        </div>
+                    `;
+                    continue;
+                }
+
+                if (!s) {
+                    html += `
+                        <div class="card-item loading" onclick="openModal('${name}')">
+                            <div class="file-name">
+                                📄 ${name.length > 30 ? name.substring(0, 27) + '...' : name}
+                                <span class="badge" style="background:#fef3c7;color:#92400e;">⏳ Processando</span>
+                            </div>
+                            <div style="text-align:center;padding:20px 0;color:#94a3b8;">
+                                Aguardando processamento...
+                            </div>
+                        </div>
+                    `;
+                    continue;
+                }
+
+                const stopTime = formatDuration(s.stopSeconds);
+                const movingTime = formatDuration(s.movingSeconds);
+
+                html += `
+                    <div class="card-item" onclick="openModal('${name}')">
+                        <div class="file-name">
+                            📄 ${name.length > 30 ? name.substring(0, 27) + '...' : name}
+                            <span class="badge">${s.totalEvents} eventos</span>
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat">
+                                <div class="label">⏱️ Tempo Parado</div>
+                                <div class="value">${stopTime}</div>
+                            </div>
+                            <div class="stat">
+                                <div class="label">🚀 Vel. Máxima</div>
+                                <div class="value">${s.maxSpeed.toFixed(1)} <small>km/h</small></div>
+                            </div>
+                            <div class="stat">
+                                <div class="label">⏳ Tempo em Movimento</div>
+                                <div class="value">${movingTime}</div>
+                            </div>
+                            <div class="stat">
+                                <div class="label">🚗 Vel. Média</div>
+                                <div class="value">${s.avgSpeed.toFixed(1)} <small>km/h</small></div>
+                            </div>
+                        </div>
+                        <div class="click-hint"><span>👆 Clique para relatório completo</span></div>
+                    </div>
+                `;
+            }
+
+            grid.innerHTML = html;
+        }
+
+        function openModal(fileName) {
+            const data = fileData[fileName];
+            if (!data) return;
+
+            const modal = document.getElementById('modalOverlay');
+            const content = document.getElementById('modalContent');
+
+            if (data.error) {
+                content.innerHTML = `
+                    <h2>⚠️ Erro no arquivo</h2>
+                    <p class="subtitle">${fileName}</p>
+                    <div style="background:#fee2e2;padding:20px;border-radius:12px;color:#991b1b;">
+                        <strong>Erro:</strong> ${data.error}
+                    </div>
+                `;
+                modal.classList.add('active');
+                activeModal = fileName;
+                return;
+            }
+
+            const s = data.summary;
+            if (!s) {
+                content.innerHTML = `
+                    <h2>⏳ Processando</h2>
+                    <p class="subtitle">${fileName}</p>
+                    <div style="text-align:center;padding:30px;color:#94a3b8;">
+                        Aguarde o processamento do arquivo...
+                    </div>
+                `;
+                modal.classList.add('active');
+                activeModal = fileName;
+                return;
+            }
+
+            const stopTime = formatDuration(s.stopSeconds);
+            const movingTime = formatDuration(s.movingSeconds);
+            const journeyTime = formatDuration(s.jornadaSegundos);
+
+            const stopComp = getTimeComponents(s.stopSeconds);
+            const movingComp = getTimeComponents(s.movingSeconds);
+            const journeyComp = getTimeComponents(s.jornadaSegundos);
+
+            const recentStops = s.stops ? s.stops.slice(-5).reverse() : [];
+
+            // Localização de Início
+            const inicio = s.inicioLocalizacao;
+            const fim = s.fimLocalizacao;
+
+            content.innerHTML = `
+                <h2>📊 ${s.frota || 'Veículo'} - ${s.placa || 'Sem placa'}</h2>
+                <p class="subtitle">${fileName} • ${s.totalEvents} eventos • ${formatDate(s.jornadaInicio)} até ${formatDate(s.jornadaFim)}</p>
+
+                <div class="modal-stats">
+                    <div class="modal-stat">
+                        <div class="label">⏱️ Tempo Parado Total</div>
+                        <div class="value">${stopTime}</div>
+                        <div class="value" style="font-size:14px;color:#64748b;font-weight:400;">
+                            ${stopComp.hours}h ${stopComp.minutes}min ${stopComp.seconds}s
+                        </div>
+                    </div>
+                    <div class="modal-stat orange">
+                        <div class="label">🚀 Velocidade Máxima</div>
+                        <div class="value">${s.maxSpeed.toFixed(1)} <small>km/h</small></div>
+                    </div>
+                    <div class="modal-stat green">
+                        <div class="label">⏳ Tempo em Movimento</div>
+                        <div class="value">${movingTime}</div>
+                        <div class="value" style="font-size:14px;color:#64748b;font-weight:400;">
+                            ${movingComp.hours}h ${movingComp.minutes}min ${movingComp.seconds}s
+                        </div>
+                    </div>
+                    <div class="modal-stat purple">
+                        <div class="label">🚗 Velocidade Média</div>
+                        <div class="value">${s.avgSpeed.toFixed(1)} <small>km/h</small></div>
+                    </div>
+                    <div class="modal-stat red">
+                        <div class="label">📏 Distância Total</div>
+                        <div class="value">${s.totalDistance.toFixed(1)} <small>km</small></div>
+                    </div>
+                    <div class="modal-stat pink">
+                        <div class="label">📊 Total de Eventos</div>
+                        <div class="value">${s.totalEvents}</div>
+                    </div>
+                </div>
+
+                <!-- LOCALIZAÇÃO DE INÍCIO E FIM -->
+                <div class="modal-section">
+                    <h3>📍 Localização da Jornada</h3>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                        <div style="background:#f0fdf4;border-radius:12px;padding:14px 16px;border-left:4px solid #16a34a;">
+                            <div style="font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;">🚀 INÍCIO DA JORNADA</div>
+                            <div style="font-size:14px;font-weight:600;color:#1a1a2e;margin-top:4px;">
+                                ${formatDate(inicio?.data)}
+                            </div>
+                            <div style="font-size:13px;color:#1a1a2e;margin-top:4px;">
+                                ${inicio?.endereco || 'Endereço não disponível'}
+                            </div>
+                            <div style="font-size:12px;color:#94a3b8;margin-top:2px;">
+                                📍 ${inicio?.latitude?.toFixed(5) || '--'}, ${inicio?.longitude?.toFixed(5) || '--'}
+                            </div>
+                            <div style="font-size:12px;color:#64748b;margin-top:4px;">
+                                Vel: ${inicio?.velocidade?.toFixed(1) || '--'} km/h • 
+                                Ignição: <span class="status-badge ${inicio?.ignicao === 'Ligado' ? 'ligado' : 'desligado'}">${inicio?.ignicao || '--'}</span>
+                                ${inicio?.hodometro ? `• Hod: ${inicio.hodometro}` : ''}
+                            </div>
+                        </div>
+                        <div style="background:#fef2f2;border-radius:12px;padding:14px 16px;border-left:4px solid #dc2626;">
+                            <div style="font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;">🏁 FIM DA JORNADA</div>
+                            <div style="font-size:14px;font-weight:600;color:#1a1a2e;margin-top:4px;">
+                                ${formatDate(fim?.data)}
+                            </div>
+                            <div style="font-size:13px;color:#1a1a2e;margin-top:4px;">
+                                ${fim?.endereco || 'Endereço não disponível'}
+                            </div>
+                            <div style="font-size:12px;color:#94a3b8;margin-top:2px;">
+                                📍 ${fim?.latitude?.toFixed(5) || '--'}, ${fim?.longitude?.toFixed(5) || '--'}
+                            </div>
+                            <div style="font-size:12px;color:#64748b;margin-top:4px;">
+                                Vel: ${fim?.velocidade?.toFixed(1) || '--'} km/h • 
+                                Ignição: <span class="status-badge ${fim?.ignicao === 'Ligado' ? 'ligado' : 'desligado'}">${fim?.ignicao || '--'}</span>
+                                ${fim?.hodometro ? `• Hod: ${fim.hodometro}` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RESUMO DA JORNADA -->
+                <div class="modal-section">
+                    <h3>📋 Resumo Detalhado da Jornada</h3>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <span class="dlabel">Início da Jornada</span>
+                            <span class="dvalue">${formatDate(s.jornadaInicio)}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="dlabel">Fim da Jornada</span>
+                            <span class="dvalue">${formatDate(s.jornadaFim)}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="dlabel">Duração da Jornada</span>
+                            <span class="dvalue">${journeyTime}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="dlabel">Duração (detalhado)</span>
+                            <span class="dvalue">${journeyComp.hours}h ${journeyComp.minutes}min ${journeyComp.seconds}s</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="dlabel">Frota</span>
+                            <span class="dvalue">${s.frota || '--'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="dlabel">Placa</span>
+                            <span class="dvalue">${s.placa || '--'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="dlabel">Motorista</span>
+                            <span class="dvalue">${s.motorista || '--'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="dlabel">Total de Paradas</span>
+                            <span class="dvalue">${s.totalStops || 0}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ÚLTIMO EVENTO -->
+                <div class="modal-section">
+                    <h3>📌 Último Evento</h3>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <span class="dlabel">Data/Hora</span>
+                            <span class="dvalue">${formatDate(s.lastEvent?.data)}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="dlabel">Velocidade</span>
+                            <span class="dvalue">${s.lastEvent?.velocidade?.toFixed(1) || '--'} km/h</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="dlabel">Ignição</span>
+                            <span class="dvalue"><span class="status-badge ${s.lastEvent?.ignicao === 'Ligado' ? 'ligado' : 'desligado'}">${s.lastEvent?.ignicao || '--'}</span></span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="dlabel">Evento</span>
+                            <span class="dvalue">${s.lastEvent?.evento || '--'}</span>
+                        </div>
+                        <div class="detail-item full">
+                            <span class="dlabel">Localização</span>
+                            <span class="dvalue">${s.lastEvent?.endereco || '--'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="dlabel">Latitude</span>
+                            <span class="dvalue">${s.lastEvent?.latitude?.toFixed(5) || '--'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="dlabel">Longitude</span>
+                            <span class="dvalue">${s.lastEvent?.longitude?.toFixed(5) || '--'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="dlabel">Hodômetro</span>
+                            <span class="dvalue">${s.lastEvent?.hodometro || '--'}</span>
+                        </div>
+                    </div>
+                </div>
+
+                ${recentStops.length > 0 ? `
+                <div class="modal-section">
+                    <h3>🛑 Últimas Paradas (${recentStops.length} de ${s.totalStops})</h3>
+                    <div style="overflow-x:auto;border-radius:10px;border:1px solid #e5e7eb;">
+                        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                            <thead style="background:#f8fafc;">
+                                <tr>
+                                    <th style="padding:10px 14px;text-align:left;">Início</th>
+                                    <th style="padding:10px 14px;text-align:left;">Fim</th>
+                                    <th style="padding:10px 14px;text-align:left;">Duração</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${recentStops.map(stop => `
+                                    <tr>
+                                        <td style="padding:8px 14px;border-bottom:1px solid #f1f5f9;">${formatDate(stop.inicio)}</td>
+                                        <td style="padding:8px 14px;border-bottom:1px solid #f1f5f9;">${formatDate(stop.fim)}</td>
+                                        <td style="padding:8px 14px;border-bottom:1px solid #f1f5f9;">${formatDuration(stop.duracaoSeg)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                ` : ''}
+            `;
+
+            modal.classList.add('active');
+            activeModal = fileName;
+        }
+
+        function closeModal(e) {
+            if (e && e.target !== e.currentTarget) return;
+            document.getElementById('modalOverlay').classList.remove('active');
+            activeModal = null;
+        }
+
+        // ============================================================
+        // FILE MANAGEMENT
+        // ============================================================
+        function processFile(file) {
+            const fileName = file.name;
+
+            if (fileData[fileName]) {
+                delete fileData[fileName];
+            }
+
+            fileData[fileName] = null;
+            renderCards();
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+
+                    const rows = parseExcelData(workbook);
+                    if (!rows || rows.length === 0) {
+                        fileData[fileName] = { error: 'Nenhum dado encontrado na planilha' };
+                        renderCards();
+                        return;
+                    }
+
+                    const result = analyzeData(rows, fileName);
+                    if (result.error) {
+                        fileData[fileName] = { error: result.error };
+                    } else {
+                        fileData[fileName] = result;
+                    }
+                    renderCards();
+
+                } catch (err) {
+                    fileData[fileName] = { error: 'Erro ao processar: ' + err.message };
+                    renderCards();
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function clearAllFiles() {
+            for (const key in fileData) {
+                delete fileData[key];
+            }
+            closeModal();
+            renderCards();
+        }
+
+        // ============================================================
+        // DRAG & DROP
+        // ============================================================
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            for (const file of files) {
+                if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                    processFile(file);
+                }
+            }
+        });
+
+        dropZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const files = e.target.files;
+            for (const file of files) {
+                if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                    processFile(file);
+                }
+            }
+            fileInput.value = '';
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // ============================================================
+        // INICIALIZAÇÃO
+        // ============================================================
+        renderCards();
+        console.log('🚛 Sistema de Análise de Rastreamento v5.1 carregado.');
+        console.log('✅ Agora com localização de INÍCIO e FIM da jornada.');
+    </script>
+
+</body>
+</html>
