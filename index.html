@@ -1,534 +1,759 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>📊 Análise de Rastreamento</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
-    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Análise de Paradas - Multi-Planilhas</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #f0f2f5;
-            color: #1a1a2e;
+            min-height: 100vh;
             padding: 20px;
-        }
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
         }
 
         .header {
-            background: linear-gradient(135deg, #1a1a2e, #16213e);
-            color: #fff;
-            padding: 20px 30px;
-            border-radius: 16px;
-            margin-bottom: 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-        .header h1 {
-            font-size: 24px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .header h1 span {
-            background: #e94560;
-            font-size: 13px;
-            padding: 4px 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
             border-radius: 20px;
-            font-weight: 400;
-        }
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        .btn-clear-all {
-            background: #ef4444;
-            color: #fff;
-            border: none;
-            padding: 8px 18px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 13px;
-            transition: 0.2s;
-        }
-        .btn-clear-all:hover {
-            background: #dc2626;
-        }
-        .file-count {
-            color: #94a3b8;
-            font-size: 14px;
-            background: rgba(255, 255, 255, 0.08);
-            padding: 6px 14px;
-            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
         }
 
-        .drop-zone {
-            border: 3px dashed #cbd5e1;
-            border-radius: 16px;
-            padding: 40px 20px;
-            text-align: center;
-            margin-bottom: 24px;
-            background: #f8fafc;
-            transition: 0.3s;
-            cursor: pointer;
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
-        .drop-zone:hover,
-        .drop-zone.dragover {
-            border-color: #2563eb;
-            background: #eff6ff;
-        }
-        .drop-zone .icon {
-            font-size: 48px;
-            margin-bottom: 12px;
-        }
-        .drop-zone p {
-            color: #64748b;
+
+        .header p {
+            opacity: 0.9;
             font-size: 16px;
         }
-        .drop-zone .sub {
+
+        .header .badge-info {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 15px;
+            border-radius: 20px;
             font-size: 13px;
-            color: #94a3b8;
-            margin-top: 4px;
+            display: inline-block;
+            margin-top: 8px;
         }
-        .drop-zone input[type="file"] {
+
+        .upload-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .upload-grid {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .upload-area {
+            border: 3px dashed #cbd5e0;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            background: #f7fafc;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #edf2f7;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #e2e8f0;
+        }
+
+        .upload-icon {
+            font-size: 40px;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .upload-text {
+            font-size: 16px;
+            color: #2d3748;
+            font-weight: 500;
+        }
+
+        .upload-hint {
+            font-size: 14px;
+            color: #718096;
+            margin-top: 5px;
+        }
+
+        #fileInput {
             display: none;
         }
-        .drop-zone .btn-upload {
-            display: inline-block;
-            background: #2563eb;
-            color: #fff;
-            padding: 10px 24px;
-            border-radius: 8px;
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
             font-weight: 600;
-            margin-top: 12px;
             cursor: pointer;
-            transition: 0.3s;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
-        .drop-zone .btn-upload:hover {
-            background: #1d4ed8;
-            transform: scale(1.02);
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: #fc8181;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #f56565;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(252, 129, 129, 0.4);
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 13px;
+        }
+
+        .actions-bar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
         .cards-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-            margin-bottom: 24px;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
         }
 
-        .card-item {
-            background: #fff;
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-            border-left: 5px solid #2563eb;
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
             cursor: pointer;
-            transition: 0.3s;
-            position: relative;
+            border-left: 5px solid #667eea;
         }
-        .card-item:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
         }
-        .card-item .file-name {
-            font-size: 16px;
-            font-weight: 600;
-            color: #1a1a2e;
-            margin-bottom: 12px;
+
+        .card-header {
             display: flex;
-            align-items: center;
-            gap: 8px;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
         }
-        .card-item .file-name .badge {
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .card-placa {
+            font-size: 13px;
+            color: #718096;
+            background: #f7fafc;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .card-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 12px 0;
+        }
+
+        .card-stat {
+            background: #f7fafc;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .card-stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .card-stat-label {
             font-size: 11px;
-            background: #dcfce7;
-            color: #166534;
-            padding: 2px 10px;
-            border-radius: 12px;
-            font-weight: 400;
+            color: #718096;
+            margin-top: 2px;
         }
-        .card-item .file-name .badge.error {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-        .card-item .stats-grid {
+
+        .card-ignicao {
+            background: #f7fafc;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 12px 0;
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 8px;
         }
-        .card-item .stat {
-            background: #f8fafc;
-            padding: 8px 10px;
-            border-radius: 8px;
+
+        .card-ignicao-item {
             text-align: center;
-        }
-        .card-item .stat .label {
-            font-size: 10px;
-            color: #94a3b8;
-            text-transform: uppercase;
-            font-weight: 600;
-        }
-        .card-item .stat .value {
-            font-size: 16px;
-            font-weight: 700;
-            color: #1a1a2e;
-            margin-top: 2px;
-        }
-        .card-item .stat .value small {
-            font-size: 11px;
-            font-weight: 400;
-            color: #94a3b8;
-        }
-        .card-item .click-hint {
-            text-align: center;
-            margin-top: 12px;
-            font-size: 12px;
-            color: #94a3b8;
-        }
-        .card-item .click-hint span {
-            background: #eef2f6;
-            padding: 2px 12px;
-            border-radius: 12px;
-        }
-        .card-item.error {
-            border-left-color: #dc2626;
-        }
-        .card-item.loading {
-            border-left-color: #f59e0b;
-            opacity: 0.7;
+            padding: 6px;
+            border-radius: 6px;
         }
 
+        .card-ignicao-item.ligado {
+            background: #fefcbf;
+        }
+
+        .card-ignicao-item.desligado {
+            background: #e2e8f0;
+        }
+
+        .card-ignicao-item .label {
+            font-size: 11px;
+            color: #718096;
+        }
+
+        .card-ignicao-item .value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .card-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .card-badge.success {
+            background: #c6f6d5;
+            color: #276749;
+        }
+
+        .card-badge.warning {
+            background: #fefcbf;
+            color: #975a16;
+        }
+
+        .card-badge.danger {
+            background: #fed7d7;
+            color: #9b2c2c;
+        }
+
+        .card-expand {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        /* Modal */
         .modal-overlay {
             display: none;
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
             z-index: 1000;
-            justify-content: center;
-            align-items: center;
+            overflow-y: auto;
             padding: 20px;
+            backdrop-filter: blur(5px);
         }
+
         .modal-overlay.active {
             display: flex;
+            align-items: center;
+            justify-content: center;
         }
+
         .modal {
-            background: #fff;
+            background: white;
             border-radius: 20px;
-            max-width: 950px;
+            max-width: 1200px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
             padding: 30px;
-            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             animation: modalIn 0.3s ease;
         }
+
         @keyframes modalIn {
             from {
-                transform: scale(0.95);
+                transform: scale(0.9) translateY(20px);
                 opacity: 0;
             }
             to {
-                transform: scale(1);
+                transform: scale(1) translateY(0);
                 opacity: 1;
             }
         }
-        .modal-close {
-            position: sticky;
-            top: 0;
-            float: right;
-            background: #fee2e2;
-            border: none;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            font-size: 20px;
-            cursor: pointer;
-            color: #dc2626;
-            font-weight: 700;
-            transition: 0.2s;
-            z-index: 10;
-        }
-        .modal-close:hover {
-            background: #fca5a5;
-            transform: rotate(90deg);
-        }
-        .modal h2 {
-            font-size: 22px;
-            margin-bottom: 8px;
-            color: #1a1a2e;
-        }
-        .modal .subtitle {
-            color: #64748b;
-            font-size: 14px;
-            margin-bottom: 20px;
-        }
 
-        .modal-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-        .modal-stat {
-            background: #f8fafc;
-            padding: 14px 16px;
-            border-radius: 12px;
-            text-align: center;
-            border-left: 4px solid #2563eb;
-        }
-        .modal-stat .label {
-            font-size: 11px;
-            color: #94a3b8;
-            text-transform: uppercase;
-            font-weight: 600;
-        }
-        .modal-stat .value {
-            font-size: 20px;
-            font-weight: 700;
-            color: #1a1a2e;
-            margin-top: 4px;
-        }
-        .modal-stat .value small {
-            font-size: 13px;
-            font-weight: 400;
-            color: #94a3b8;
-        }
-        .modal-stat .value .time-detail {
-            font-size: 14px;
-            font-weight: 400;
-            color: #64748b;
-            display: block;
-        }
-        .modal-stat.orange {
-            border-left-color: #f59e0b;
-        }
-        .modal-stat.green {
-            border-left-color: #16a34a;
-        }
-        .modal-stat.red {
-            border-left-color: #dc2626;
-        }
-        .modal-stat.purple {
-            border-left-color: #9333ea;
-        }
-        .modal-stat.pink {
-            border-left-color: #ec4899;
-        }
-        .modal-stat.teal {
-            border-left-color: #14b8a6;
-        }
-
-        .modal-section {
-            margin-top: 20px;
-            border-top: 1px solid #e5e7eb;
-            padding-top: 16px;
-        }
-        .modal-section h3 {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            color: #1a1a2e;
-        }
-        .modal-section .detail-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 8px;
-        }
-        .modal-section .detail-item {
-            background: #f8fafc;
-            padding: 8px 12px;
-            border-radius: 8px;
+        .modal-header {
             display: flex;
             justify-content: space-between;
-            font-size: 14px;
-        }
-        .modal-section .detail-item .dlabel {
-            color: #64748b;
-        }
-        .modal-section .detail-item .dvalue {
-            font-weight: 600;
-            color: #1a1a2e;
-        }
-        .modal-section .detail-item .dvalue .coord {
-            font-weight: 400;
-            color: #64748b;
-            font-size: 12px;
-        }
-        .modal-section .detail-item.full {
-            grid-column: 1 / -1;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
         }
 
-        .status-badge {
+        .modal-header h2 {
+            font-size: 24px;
+            color: #2d3748;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 30px;
+            cursor: pointer;
+            color: #a0aec0;
+            transition: color 0.3s ease;
+        }
+
+        .modal-close:hover {
+            color: #2d3748;
+        }
+
+        .modal-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .modal-summary-item {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .modal-summary-item .value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .modal-summary-item .label {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .modal-ignicao-resumo {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .modal-ignicao-resumo .box {
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .modal-ignicao-resumo .box.ligado {
+            background: #fefcbf;
+            border: 2px solid #f6c23e;
+        }
+
+        .modal-ignicao-resumo .box.desligado {
+            background: #e2e8f0;
+            border: 2px solid #a0aec0;
+        }
+
+        .modal-ignicao-resumo .box .value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .modal-ignicao-resumo .box .label {
+            font-size: 13px;
+            color: #4a5568;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        thead {
+            background: #f7fafc;
+        }
+
+        th {
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #2d3748;
+            border-bottom: 2px solid #e2e8f0;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 10px 15px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #4a5568;
+        }
+
+        tr:hover td {
+            background: #f7fafc;
+        }
+
+        .badge {
             display: inline-block;
-            padding: 2px 10px;
-            border-radius: 20px;
+            padding: 3px 10px;
+            border-radius: 15px;
             font-size: 11px;
             font-weight: 600;
         }
-        .status-badge.ligado {
-            background: #dcfce7;
-            color: #166534;
-        }
-        .status-badge.desligado {
-            background: #fee2e2;
-            color: #991b1b;
+
+        .badge-green {
+            background: #c6f6d5;
+            color: #276749;
         }
 
-        .location-info {
-            background: #eff6ff;
-            border-radius: 10px;
-            padding: 12px 16px;
-            margin: 6px 0;
-            border-left: 3px solid #2563eb;
-        }
-        .location-info .loc-label {
-            font-size: 12px;
-            color: #64748b;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        .location-info .loc-value {
-            font-size: 14px;
-            color: #1a1a2e;
-            font-weight: 500;
-        }
-        .location-info .loc-coord {
-            font-size: 12px;
-            color: #94a3b8;
+        .badge-yellow {
+            background: #fefcbf;
+            color: #975a16;
         }
 
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+        .badge-red {
+            background: #fed7d7;
+            color: #9b2c2c;
         }
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9;
+
+        .badge-blue {
+            background: #bee3f8;
+            color: #2a4365;
+        }
+
+        .badge-purple {
+            background: #e9d8fd;
+            color: #6b46c1;
+        }
+
+        .badge-gray {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 60px 20px;
+            color: #a0aec0;
+        }
+
+        .no-data-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+
+        .no-data h3 {
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .alert {
+            padding: 15px 20px;
             border-radius: 10px;
+            margin-bottom: 15px;
         }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 10px;
+
+        .alert-success {
+            background: #c6f6d5;
+            border: 1px solid #9ae6b4;
+            color: #276749;
         }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
+
+        .alert-error {
+            background: #fed7d7;
+            border: 1px solid #feb2b2;
+            color: #9b2c2c;
         }
+
+        .alert-info {
+            background: #bee3f8;
+            border: 1px solid #90cdf4;
+            color: #2a4365;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .text-muted {
+            color: #718096;
+            font-size: 13px;
+        }
+
+        .mt-10 { margin-top: 10px; }
+        .mb-10 { margin-bottom: 10px; }
 
         @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                align-items: stretch;
+            .header h1 {
+                font-size: 24px;
             }
+
+            .upload-grid {
+                grid-template-columns: 1fr;
+            }
+
             .cards-grid {
                 grid-template-columns: 1fr;
             }
+
             .modal {
                 padding: 20px;
-                margin: 10px;
             }
-            .modal-stats {
+
+            .modal-summary {
                 grid-template-columns: 1fr 1fr;
             }
-            .modal-stat .value {
-                font-size: 17px;
+
+            .modal-ignicao-resumo {
+                grid-template-columns: 1fr;
             }
-            .modal-section .detail-grid {
+
+            .card-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .card-ignicao {
                 grid-template-columns: 1fr;
             }
         }
 
-        .footer {
-            text-align: center;
-            font-size: 12px;
-            color: #94a3b8;
-            padding: 16px 0 8px;
-            border-top: 1px solid #e5e7eb;
-            margin-top: 16px;
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
         }
 
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #94a3b8;
-            grid-column: 1 / -1;
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
         }
-        .empty-state .icon {
-            font-size: 48px;
-            margin-bottom: 12px;
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
         }
     </style>
 </head>
 <body>
-
-    <div class="container">
-        <div class="header">
-            <h1>🚛 Análise de Rastreamento <span>v5.1</span></h1>
-            <div class="header-actions">
-                <span class="file-count" id="fileCount">0 arquivos</span>
-                <button class="btn-clear-all" onclick="clearAllFiles()">🗑️ Limpar Todos</button>
-            </div>
-        </div>
-
-        <div class="drop-zone" id="dropZone">
-            <div class="icon">📂</div>
-            <p><strong>Arraste e solte</strong> seus arquivos Excel aqui</p>
-            <p class="sub">ou clique para selecionar</p>
-            <label class="btn-upload" for="fileInput">📤 Selecionar Arquivos</label>
-            <input type="file" id="fileInput" multiple accept=".xlsx,.xls" />
-        </div>
-
-        <div class="cards-grid" id="cardsGrid">
-            <div class="empty-state">
-                <div class="icon">📭</div>
-                <p>Nenhum arquivo carregado</p>
-                <p style="font-size:13px;color:#94a3b8;">Arraste e solte uma planilha para começar</p>
-            </div>
-        </div>
-
-        <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
-            <div class="modal" onclick="event.stopPropagation()">
-                <button class="modal-close" onclick="closeModal()">✕</button>
-                <div id="modalContent"></div>
-            </div>
-        </div>
-
-        <div class="footer">
-            Sistema de Análise de Rastreamento • Processamento local • Cálculos 100% baseados nos dados da planilha
+    <div class="header">
+        <h1>🚛 Sistema Multi-Planilhas de Paradas</h1>
+        <p>Carregue quantas planilhas quiser. Cada veículo terá um card com suas informações.</p>
+        <div class="badge-info">
+            📌 Usando apenas colunas: Data (D) | Velocidade (G) | Ignição (H)
         </div>
     </div>
 
+    <div class="upload-section">
+        <div class="upload-grid">
+            <div id="uploadArea" class="upload-area">
+                <div class="upload-icon">📊</div>
+                <div class="upload-text">Clique ou arraste suas planilhas aqui</div>
+                <div class="upload-hint">Formatos: .xlsx, .xls | Múltiplos arquivos permitidos</div>
+                <input type="file" id="fileInput" accept=".xlsx,.xls" multiple>
+                <br><br>
+                <button class="btn btn-primary" id="uploadBtn">📁 Selecionar Arquivos</button>
+            </div>
+            <div class="actions-bar">
+                <button class="btn btn-danger" id="clearAllBtn">🗑️ Limpar Tudo</button>
+            </div>
+        </div>
+        <div id="alertContainer"></div>
+    </div>
+
+    <div id="cardsContainer">
+        <div class="no-data" id="emptyState">
+            <div class="no-data-icon">📋</div>
+            <h3>Nenhuma planilha carregada</h3>
+            <p>Carregue uma ou mais planilhas para começar a análise</p>
+        </div>
+        <div class="cards-grid" id="cardsGrid"></div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modalTitle">Detalhes das Paradas</h2>
+                <button class="modal-close" id="modalClose">✕</button>
+            </div>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
     <script>
         // ============================================================
-        // GLOBALS
+        // ESTADO GLOBAL
         // ============================================================
-        const fileData = {};
-        let activeModal = null;
+        let veiculosData = [];
+        let currentVeiculoIndex = -1;
 
         // ============================================================
-        // UTILITÁRIOS
+        // ELEMENTOS DOM
         // ============================================================
-        function formatDate(d) {
-            if (!d) return '--';
-            const dt = new Date(d);
-            return dt.toLocaleString('pt-BR', {
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const clearAllBtn = document.getElementById('clearAllBtn');
+        const alertContainer = document.getElementById('alertContainer');
+        const cardsGrid = document.getElementById('cardsGrid');
+        const emptyState = document.getElementById('emptyState');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalClose = document.getElementById('modalClose');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalContent = document.getElementById('modalContent');
+
+        // ============================================================
+        // FUNÇÕES AUXILIARES
+        // ============================================================
+
+        function mostrarAlerta(mensagem, tipo = 'info') {
+            const alertas = {
+                info: `<div class="alert alert-info">ℹ️ ${mensagem}</div>`,
+                success: `<div class="alert alert-success">✅ ${mensagem}</div>`,
+                error: `<div class="alert alert-error">❌ ${mensagem}</div>`
+            };
+            alertContainer.innerHTML = alertas[tipo] || alertas.info;
+            setTimeout(() => {
+                alertContainer.innerHTML = '';
+            }, 5000);
+        }
+
+        function formatarTempo(segundos) {
+            if (segundos < 0) return '0s';
+            if (!segundos || isNaN(segundos)) return '0s';
+            
+            const horas = Math.floor(segundos / 3600);
+            const minutos = Math.floor((segundos % 3600) / 60);
+            const segs = Math.floor(segundos % 60);
+
+            if (horas > 0) {
+                return `${horas}h ${minutos}m ${segs}s`;
+            } else if (minutos > 0) {
+                return `${minutos}m ${segs}s`;
+            } else {
+                return `${segs}s`;
+            }
+        }
+
+        function formatarTempoCurto(segundos) {
+            if (segundos < 0) return '0s';
+            if (!segundos || isNaN(segundos)) return '0s';
+            
+            const horas = Math.floor(segundos / 3600);
+            const minutos = Math.floor((segundos % 3600) / 60);
+            const segs = Math.floor(segundos % 60);
+
+            if (horas > 0) {
+                return `${horas}h ${minutos}m`;
+            } else if (minutos > 0) {
+                return `${minutos}m ${segs}s`;
+            } else {
+                return `${segs}s`;
+            }
+        }
+
+        function formatarData(data) {
+            const d = new Date(data);
+            return d.toLocaleString('pt-BR', {
                 day: '2-digit',
                 month: '2-digit',
                 year: 'numeric',
@@ -538,749 +763,579 @@
             });
         }
 
-        function formatDuration(seconds) {
-            if (!seconds || seconds < 0) return '0s';
-            const hours = Math.floor(seconds / 3600);
-            const minutes = Math.floor((seconds % 3600) / 60);
-            const secs = Math.floor(seconds % 60);
-
-            let parts = [];
-            if (hours > 0) parts.push(`${hours}h`);
-            if (minutes > 0 || hours > 0) parts.push(`${minutes}min`);
-            parts.push(`${secs}s`);
-            return parts.join(' ');
+        function extrairPlaca(linhas) {
+            for (const linha of linhas) {
+                if (linha.placa && linha.placa.length > 0) {
+                    return linha.placa;
+                }
+            }
+            return 'Placa não identificada';
         }
 
-        function getTimeComponents(seconds) {
-            if (!seconds || seconds < 0) return { hours: 0, minutes: 0, seconds: 0 };
+        function extrairNomePlanilha(nomeArquivo) {
+            return nomeArquivo.replace(/\.(xlsx|xls)$/i, '');
+        }
+
+        function getStatusParada(tempoSegundos) {
+            if (tempoSegundos > 300) return { label: 'Longa', class: 'badge-red' };
+            if (tempoSegundos > 120) return { label: 'Média', class: 'badge-yellow' };
+            return { label: 'Curta', class: 'badge-green' };
+        }
+
+        // ============================================================
+        // PROCESSAMENTO DA PLANILHA
+        // ============================================================
+
+        function processarPlanilha(jsonData, nomeArquivo) {
+            const linhas = [];
+            let placa = '';
+
+            for (let i = 1; i < jsonData.length; i++) {
+                const linha = jsonData[i];
+                if (!linha || linha.length === 0) continue;
+
+                // Verificar rodapé
+                if (linha[0] && typeof linha[0] === 'string' && linha[0].includes('Este relatório')) {
+                    break;
+                }
+
+                // Extrair placa (coluna B)
+                if (!placa && linha[1] && typeof linha[1] === 'string' && linha[1].trim().length > 0) {
+                    placa = linha[1].trim();
+                }
+
+                const dataStr = linha[3]; // Coluna D - Data
+                const velocidadeStr = linha[6]; // Coluna G - Velocidade
+                const ignicaoStr = linha[7]; // Coluna H - Ignição
+
+                if (!dataStr || !velocidadeStr) continue;
+
+                // Converter data
+                let dataObj;
+                try {
+                    const partes = dataStr.toString().split(' ');
+                    if (partes.length === 2) {
+                        const dataPart = partes[0].split('/');
+                        const horaPart = partes[1].split(':');
+                        if (dataPart.length === 3 && horaPart.length === 3) {
+                            dataObj = new Date(
+                                parseInt(dataPart[2]),
+                                parseInt(dataPart[1]) - 1,
+                                parseInt(dataPart[0]),
+                                parseInt(horaPart[0]),
+                                parseInt(horaPart[1]),
+                                parseInt(horaPart[2])
+                            );
+                        }
+                    }
+                } catch (e) {
+                    continue;
+                }
+
+                if (!dataObj || isNaN(dataObj.getTime())) continue;
+
+                // Converter velocidade
+                let velocidade = 0;
+                try {
+                    const velStr = velocidadeStr.toString()
+                        .replace(',', '.')
+                        .replace(' km/h', '')
+                        .trim();
+                    velocidade = parseFloat(velStr);
+                    if (isNaN(velocidade)) velocidade = 0;
+                } catch (e) {
+                    velocidade = 0;
+                }
+
+                // Extrair ignição
+                let ignicao = 'Desligado';
+                if (ignicaoStr) {
+                    const ignStr = ignicaoStr.toString().trim();
+                    if (ignStr.toLowerCase().includes('ligado')) {
+                        ignicao = 'Ligado';
+                    } else if (ignStr.toLowerCase().includes('desligado')) {
+                        ignicao = 'Desligado';
+                    }
+                }
+
+                linhas.push({
+                    data: dataObj,
+                    velocidade: velocidade,
+                    ignicao: ignicao,
+                    placa: placa
+                });
+            }
+
+            // Ordenar por data
+            linhas.sort((a, b) => a.data.getTime() - b.data.getTime());
+
             return {
-                hours: Math.floor(seconds / 3600),
-                minutes: Math.floor((seconds % 3600) / 60),
-                seconds: Math.floor(seconds % 60)
+                nome: extrairNomePlanilha(nomeArquivo),
+                placa: placa || 'N/A',
+                dados: linhas,
+                totalRegistros: linhas.length
             };
         }
 
-        function parseSpeed(val) {
-            if (val === undefined || val === null) return 0;
-            if (typeof val === 'number') return val;
-            if (typeof val === 'string') {
-                const cleaned = val.replace(' km/h', '').replace(',', '.').trim();
-                const parsed = parseFloat(cleaned);
-                return isNaN(parsed) ? 0 : parsed;
-            }
-            return 0;
-        }
+        function detectarParadas(dados) {
+            const paradas = [];
+            let i = 0;
 
-        function parseDateTime(val) {
-            if (!val) return null;
-            let d = new Date(val);
-            if (!isNaN(d)) return d;
+            while (i < dados.length) {
+                if (dados[i].velocidade === 0) {
+                    const inicio = dados[i].data;
+                    const ignicaoInicio = dados[i].ignicao;
+                    let j = i;
 
-            const parts = String(val).trim().match(/(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})/);
-            if (parts) {
-                return new Date(
-                    parseInt(parts[3]),
-                    parseInt(parts[2]) - 1,
-                    parseInt(parts[1]),
-                    parseInt(parts[4]),
-                    parseInt(parts[5]),
-                    parseInt(parts[6])
-                );
-            }
-            return null;
-        }
-
-        function normalizeColumnName(name) {
-            if (!name) return '';
-            return String(name).trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-        }
-
-        function findColumn(keys, data) {
-            for (const key of keys) {
-                for (const col of Object.keys(data)) {
-                    if (normalizeColumnName(col) === key) {
-                        return col;
-                    }
-                }
-            }
-            return null;
-        }
-
-        function parseExcelData(workbook) {
-            let sheet = workbook.Sheets['ag-grid'];
-            if (!sheet) {
-                const firstSheetName = workbook.SheetNames[0];
-                if (!firstSheetName) return [];
-                sheet = workbook.Sheets[firstSheetName];
-            }
-            return XLSX.utils.sheet_to_json(sheet, { defval: '' });
-        }
-
-        // ============================================================
-        // ANÁLISE PRINCIPAL
-        // ============================================================
-        function analyzeData(rows, fileName) {
-            if (!rows || rows.length === 0) {
-                return { data: [], summary: {}, error: 'Nenhum dado encontrado' };
-            }
-
-            try {
-                const colMap = {
-                    data: findColumn(['data'], rows[0]),
-                    velocidade: findColumn(['velocidade'], rows[0]),
-                    ignicao: findColumn(['ignicao', 'ignição'], rows[0]),
-                    hodometro: findColumn(['hodômetro', 'hodometro'], rows[0]),
-                    latitude: findColumn(['latitude'], rows[0]),
-                    longitude: findColumn(['longitude'], rows[0]),
-                    endereco: findColumn(['endereço', 'endereco'], rows[0]),
-                    frota: findColumn(['frota'], rows[0]),
-                    placa: findColumn(['placa'], rows[0]),
-                    motorista: findColumn(['motorista'], rows[0]),
-                    evento: findColumn(['teleevento', 'evento'], rows[0]),
-                };
-
-                const processed = [];
-                for (const row of rows) {
-                    const dt = parseDateTime(row[colMap.data]);
-                    if (!dt) continue;
-
-                    const entry = {
-                        raw: row,
-                        data: dt,
-                        velocidade: parseSpeed(row[colMap.velocidade]),
-                        ignicao: String(row[colMap.ignicao] || '').trim(),
-                        hodometro: String(row[colMap.hodometro] || '').trim(),
-                        latitude: parseFloat(row[colMap.latitude]) || 0,
-                        longitude: parseFloat(row[colMap.longitude]) || 0,
-                        endereco: row[colMap.endereco] || '',
-                        frota: row[colMap.frota] || '',
-                        placa: row[colMap.placa] || '',
-                        motorista: row[colMap.motorista] || '',
-                        evento: row[colMap.evento] || '',
-                    };
-
-                    const ign = entry.ignicao.toLowerCase();
-                    if (ign.includes('ligado') || ign.includes('ligada')) {
-                        entry.ignicao = 'Ligado';
-                    } else if (ign.includes('desligado') || ign.includes('desligada')) {
-                        entry.ignicao = 'Desligado';
-                    }
-
-                    processed.push(entry);
-                }
-
-                processed.sort((a, b) => a.data - b.data);
-
-                if (processed.length === 0) {
-                    return { data: [], summary: {}, error: 'Nenhum dado válido encontrado' };
-                }
-
-                const first = processed[0];
-                const last = processed[processed.length - 1];
-
-                // ============================================================
-                // CÁLCULOS
-                // ============================================================
-
-                let stopSeconds = 0;
-                let movingSeconds = 0;
-                let maxSpeed = 0;
-                let speedSum = 0;
-                let speedCount = 0;
-                let totalDistance = 0;
-                let prevHodometro = null;
-
-                let stops = [];
-                let stopStart = null;
-                let stopStartData = null;
-
-                for (let i = 0; i < processed.length; i++) {
-                    const current = processed[i];
-                    const prev = i > 0 ? processed[i - 1] : null;
-
-                    let timeDiff = 0;
-                    if (prev) {
-                        timeDiff = (current.data - prev.data) / 1000;
-                        if (timeDiff > 300) timeDiff = 0;
-                    }
-
-                    if (timeDiff > 0) {
-                        if (current.velocidade === 0) {
-                            stopSeconds += timeDiff;
-                            if (stopStart === null) {
-                                stopStart = prev.data;
-                                stopStartData = prev;
-                            }
-                        } else {
-                            movingSeconds += timeDiff;
-                            if (stopStart !== null) {
-                                const duration = (prev.data - stopStart) / 1000;
-                                if (duration > 10) {
-                                    stops.push({
-                                        inicio: stopStart,
-                                        fim: prev.data,
-                                        duracaoSeg: duration,
-                                        kmInicial: stopStartData?.hodometro || '--',
-                                        kmFinal: prev.hodometro || '--'
-                                    });
-                                }
-                                stopStart = null;
-                                stopStartData = null;
-                            }
-                        }
-                    }
-
-                    if (current.velocidade > maxSpeed) {
-                        maxSpeed = current.velocidade;
-                    }
-
-                    if (current.velocidade > 0) {
-                        speedSum += current.velocidade;
-                        speedCount++;
-                    }
-
-                    if (current.hodometro) {
-                        const kmStr = String(current.hodometro)
-                            .replace(' km', '')
-                            .replace(' e', '.')
-                            .replace(' m', '')
-                            .trim();
-                        const km = parseFloat(kmStr);
-                        if (!isNaN(km) && km > 0) {
-                            if (prevHodometro !== null && km > prevHodometro) {
-                                totalDistance += (km - prevHodometro);
-                            }
-                            prevHodometro = km;
-                        }
-                    }
-                }
-
-                if (stopStart !== null) {
-                    const lastP = processed[processed.length - 1];
-                    const duration = (lastP.data - stopStart) / 1000;
-                    if (duration > 10) {
-                        stops.push({
-                            inicio: stopStart,
-                            fim: lastP.data,
-                            duracaoSeg: duration,
-                            kmInicial: stopStartData?.hodometro || '--',
-                            kmFinal: lastP.hodometro || '--'
+                    // Coletar todos os registros com velocidade 0
+                    const registrosParada = [];
+                    while (j < dados.length && dados[j].velocidade === 0) {
+                        registrosParada.push({
+                            data: dados[j].data,
+                            ignicao: dados[j].ignicao
                         });
+                        j++;
                     }
+
+                    // Verificar se encontrou um registro com velocidade > 0
+                    if (j < dados.length) {
+                        const fim = dados[j].data;
+                        const tempoSegundos = (fim.getTime() - inicio.getTime()) / 1000;
+
+                        // Calcular tempo com ignição ligada e desligada dentro da parada
+                        let tempoLigado = 0;
+                        let tempoDesligado = 0;
+
+                        for (let k = 0; k < registrosParada.length - 1; k++) {
+                            const atual = registrosParada[k];
+                            const proximo = registrosParada[k + 1];
+                            const diff = (proximo.data.getTime() - atual.data.getTime()) / 1000;
+                            
+                            if (atual.ignicao === 'Ligado') {
+                                tempoLigado += diff;
+                            } else {
+                                tempoDesligado += diff;
+                            }
+                        }
+
+                        // Último registro da parada até o fim
+                        const ultimo = registrosParada[registrosParada.length - 1];
+                        const diffFinal = (fim.getTime() - ultimo.data.getTime()) / 1000;
+                        if (ultimo.ignicao === 'Ligado') {
+                            tempoLigado += diffFinal;
+                        } else {
+                            tempoDesligado += diffFinal;
+                        }
+
+                        paradas.push({
+                            inicio: inicio,
+                            fim: fim,
+                            tempoSegundos: tempoSegundos,
+                            tempoFormatado: formatarTempo(tempoSegundos),
+                            status: getStatusParada(tempoSegundos),
+                            ignicaoInicio: ignicaoInicio,
+                            ignicaoFim: dados[j - 1]?.ignicao || ignicaoInicio,
+                            tempoLigado: tempoLigado,
+                            tempoDesligado: tempoDesligado,
+                            registros: registrosParada
+                        });
+
+                        i = j;
+                    } else {
+                        // Parada em andamento (não finalizada)
+                        let tempoLigado = 0;
+                        let tempoDesligado = 0;
+
+                        for (let k = 0; k < registrosParada.length - 1; k++) {
+                            const atual = registrosParada[k];
+                            const proximo = registrosParada[k + 1];
+                            const diff = (proximo.data.getTime() - atual.data.getTime()) / 1000;
+                            
+                            if (atual.ignicao === 'Ligado') {
+                                tempoLigado += diff;
+                            } else {
+                                tempoDesligado += diff;
+                            }
+                        }
+
+                        paradas.push({
+                            inicio: inicio,
+                            fim: null,
+                            tempoSegundos: 0,
+                            tempoFormatado: 'Em andamento',
+                            status: { label: 'Em andamento', class: 'badge-blue' },
+                            ignicaoInicio: ignicaoInicio,
+                            ignicaoFim: 'Em andamento',
+                            tempoLigado: tempoLigado,
+                            tempoDesligado: tempoDesligado,
+                            registros: registrosParada,
+                            emAndamento: true
+                        });
+                        break;
+                    }
+                } else {
+                    i++;
                 }
+            }
 
-                const jornadaSegundos = (last.data - first.data) / 1000;
-                const avgSpeed = speedCount > 0 ? speedSum / speedCount : 0;
+            return paradas;
+        }
 
-                // ============================================================
-                // LOCALIZAÇÃO DE INÍCIO E FIM
-                // ============================================================
-                const inicioLocalizacao = {
-                    data: first.data,
-                    latitude: first.latitude,
-                    longitude: first.longitude,
-                    endereco: first.endereco,
-                    velocidade: first.velocidade,
-                    ignicao: first.ignicao,
-                    evento: first.evento,
-                    hodometro: first.hodometro
+        // ============================================================
+        // PROCESSAR ARQUIVOS
+        // ============================================================
+
+        function processarArquivos(files) {
+            let processados = 0;
+            const total = files.length;
+
+            for (const file of files) {
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+                        const resultado = processarPlanilha(jsonData, file.name);
+
+                        if (resultado.dados.length === 0) {
+                            mostrarAlerta(`Planilha "${file.name}" não contém dados válidos.`, 'error');
+                            return;
+                        }
+
+                        const paradas = detectarParadas(resultado.dados);
+
+                        // Calcular estatísticas
+                        const paradasFinalizadas = paradas.filter(p => p.fim !== null);
+                        const totalParadas = paradasFinalizadas.length;
+                        const somaTempo = paradasFinalizadas.reduce((acc, p) => acc + p.tempoSegundos, 0);
+                        const media = totalParadas > 0 ? somaTempo / totalParadas : 0;
+                        const maior = totalParadas > 0 ? Math.max(...paradasFinalizadas.map(p => p.tempoSegundos)) : 0;
+
+                        // Calcular tempo por ignição
+                        let totalLigado = 0;
+                        let totalDesligado = 0;
+                        paradasFinalizadas.forEach(p => {
+                            totalLigado += p.tempoLigado || 0;
+                            totalDesligado += p.tempoDesligado || 0;
+                        });
+
+                        // Paradas em andamento
+                        const emAndamento = paradas.filter(p => p.emAndamento === true);
+
+                        veiculosData.push({
+                            id: Date.now() + Math.random(),
+                            nome: resultado.nome,
+                            placa: resultado.placa,
+                            totalRegistros: resultado.totalRegistros,
+                            paradas: paradas,
+                            stats: {
+                                totalParadas: totalParadas,
+                                somaTempo: somaTempo,
+                                media: media,
+                                maior: maior,
+                                emAndamento: emAndamento.length,
+                                tempoLigado: totalLigado,
+                                tempoDesligado: totalDesligado
+                            }
+                        });
+
+                        processados++;
+
+                        if (processados === total) {
+                            atualizarCards();
+                            mostrarAlerta(`${total} planilha(s) carregada(s) com sucesso!`, 'success');
+                        }
+
+                    } catch (error) {
+                        mostrarAlerta(`Erro ao processar "${file.name}": ${error.message}`, 'error');
+                        console.error(error);
+                    }
                 };
 
-                const fimLocalizacao = {
-                    data: last.data,
-                    latitude: last.latitude,
-                    longitude: last.longitude,
-                    endereco: last.endereco,
-                    velocidade: last.velocidade,
-                    ignicao: last.ignicao,
-                    evento: last.evento,
-                    hodometro: last.hodometro
+                reader.onerror = function() {
+                    mostrarAlerta(`Erro ao ler o arquivo "${file.name}"`, 'error');
                 };
 
-                // ============================================================
-                // RESUMO
-                // ============================================================
-                const summary = {
-                    fileName: fileName,
-                    totalEvents: processed.length,
-                    frota: last.frota || first.frota || '--',
-                    placa: last.placa || first.placa || '--',
-                    motorista: last.motorista || first.motorista || '--',
-
-                    jornadaInicio: first.data,
-                    jornadaFim: last.data,
-                    jornadaSegundos: jornadaSegundos,
-
-                    stopSeconds: stopSeconds,
-                    movingSeconds: movingSeconds,
-
-                    maxSpeed: maxSpeed,
-                    avgSpeed: avgSpeed,
-
-                    totalDistance: totalDistance,
-
-                    // LOCALIZAÇÃO DE INÍCIO E FIM
-                    inicioLocalizacao: inicioLocalizacao,
-                    fimLocalizacao: fimLocalizacao,
-
-                    lastEvent: {
-                        data: last.data,
-                        velocidade: last.velocidade,
-                        ignicao: last.ignicao,
-                        latitude: last.latitude,
-                        longitude: last.longitude,
-                        endereco: last.endereco,
-                        evento: last.evento,
-                        hodometro: last.hodometro
-                    },
-
-                    stops: stops,
-                    totalStops: stops.length,
-                };
-
-                return { data: processed, summary: summary };
-
-            } catch (err) {
-                return { data: [], summary: {}, error: err.message };
+                reader.readAsArrayBuffer(file);
             }
         }
 
         // ============================================================
-        // RENDER
+        // ATUALIZAR CARDS
         // ============================================================
-        function renderCards() {
-            const grid = document.getElementById('cardsGrid');
-            const names = Object.keys(fileData);
 
-            if (names.length === 0) {
-                grid.innerHTML = `
-                    <div class="empty-state">
-                        <div class="icon">📭</div>
-                        <p>Nenhum arquivo carregado</p>
-                        <p style="font-size:13px;color:#94a3b8;">Arraste e solte uma planilha para começar</p>
-                    </div>
-                `;
-                document.getElementById('fileCount').textContent = '0 arquivos';
+        function atualizarCards() {
+            if (veiculosData.length === 0) {
+                emptyState.classList.remove('hidden');
+                cardsGrid.innerHTML = '';
                 return;
             }
 
-            document.getElementById('fileCount').textContent = `${names.length} arquivo${names.length > 1 ? 's' : ''}`;
+            emptyState.classList.add('hidden');
+            cardsGrid.innerHTML = '';
 
-            let html = '';
-            for (const name of names) {
-                const data = fileData[name];
-                const hasError = data && data.error;
-                const s = data?.summary;
+            veiculosData.forEach((veiculo, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.onclick = () => abrirModal(index);
 
-                if (hasError) {
-                    html += `
-                        <div class="card-item error" onclick="openModal('${name}')">
-                            <div class="file-name">
-                                📄 ${name.length > 30 ? name.substring(0, 27) + '...' : name}
-                                <span class="badge error">⚠️ Erro</span>
-                            </div>
-                            <div style="color:#dc2626;font-size:14px;text-align:center;padding:20px 0;">
-                                ${data.error}
-                            </div>
-                            <div class="click-hint"><span>👆 Clique para detalhes</span></div>
-                        </div>
-                    `;
-                    continue;
-                }
+                const stats = veiculo.stats;
+                const totalParadas = stats.totalParadas;
+                const tempoTotal = formatarTempoCurto(stats.somaTempo);
+                const media = formatarTempoCurto(stats.media);
+                const maior = formatarTempoCurto(stats.maior);
+                const tempoLigado = formatarTempoCurto(stats.tempoLigado);
+                const tempoDesligado = formatarTempoCurto(stats.tempoDesligado);
 
-                if (!s) {
-                    html += `
-                        <div class="card-item loading" onclick="openModal('${name}')">
-                            <div class="file-name">
-                                📄 ${name.length > 30 ? name.substring(0, 27) + '...' : name}
-                                <span class="badge" style="background:#fef3c7;color:#92400e;">⏳ Processando</span>
-                            </div>
-                            <div style="text-align:center;padding:20px 0;color:#94a3b8;">
-                                Aguardando processamento...
+                const statusClass = totalParadas > 0 
+                    ? (stats.somaTempo > 3600 ? 'danger' : stats.somaTempo > 1800 ? 'warning' : 'success')
+                    : 'warning';
+
+                const percentLigado = stats.somaTempo > 0 
+                    ? Math.round((stats.tempoLigado / stats.somaTempo) * 100)
+                    : 0;
+
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">${veiculo.nome}</div>
+                            <div style="font-size:12px; color:#718096; margin-top:2px;">
+                                ${veiculo.totalRegistros} registros
                             </div>
                         </div>
-                    `;
-                    continue;
-                }
+                        <span class="card-placa">${veiculo.placa}</span>
+                    </div>
+                    <div class="card-stats">
+                        <div class="card-stat">
+                            <div class="card-stat-value">${totalParadas}</div>
+                            <div class="card-stat-label">Total de Paradas</div>
+                        </div>
+                        <div class="card-stat">
+                            <div class="card-stat-value">${tempoTotal}</div>
+                            <div class="card-stat-label">Tempo Total Parado</div>
+                        </div>
+                        <div class="card-stat">
+                            <div class="card-stat-value">${media}</div>
+                            <div class="card-stat-label">Média por Parada</div>
+                        </div>
+                        <div class="card-stat">
+                            <div class="card-stat-value">${maior}</div>
+                            <div class="card-stat-label">Maior Período</div>
+                        </div>
+                    </div>
+                    <div class="card-ignicao">
+                        <div class="card-ignicao-item ligado">
+                            <div class="label">🔥 Ignição Ligada</div>
+                            <div class="value">${tempoLigado}</div>
+                            <div style="font-size:11px; color:#718096;">${percentLigado}% do total</div>
+                        </div>
+                        <div class="card-ignicao-item desligado">
+                            <div class="label">⛔ Ignição Desligada</div>
+                            <div class="value">${tempoDesligado}</div>
+                            <div style="font-size:11px; color:#718096;">${100 - percentLigado}% do total</div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="card-badge ${statusClass}">
+                            ${totalParadas > 0 ? `${totalParadas} parada(s)` : 'Sem paradas'}
+                            ${stats.emAndamento > 0 ? ` (${stats.emAndamento} em andamento)` : ''}
+                        </span>
+                        <span class="card-expand">Clique para detalhes →</span>
+                    </div>
+                `;
 
-                const stopTime = formatDuration(s.stopSeconds);
-                const movingTime = formatDuration(s.movingSeconds);
+                cardsGrid.appendChild(card);
+            });
+        }
 
+        // ============================================================
+        // MODAL DE DETALHES
+        // ============================================================
+
+        function abrirModal(index) {
+            const veiculo = veiculosData[index];
+            if (!veiculo) return;
+
+            currentVeiculoIndex = index;
+            modalTitle.textContent = `📊 ${veiculo.nome} - ${veiculo.placa}`;
+
+            const stats = veiculo.stats;
+            const paradas = veiculo.paradas;
+
+            let html = `
+                <div class="modal-summary">
+                    <div class="modal-summary-item">
+                        <div class="value">${stats.totalParadas}</div>
+                        <div class="label">Paradas Finalizadas</div>
+                    </div>
+                    <div class="modal-summary-item">
+                        <div class="value">${formatarTempo(stats.somaTempo)}</div>
+                        <div class="label">Tempo Total Parado</div>
+                    </div>
+                    <div class="modal-summary-item">
+                        <div class="value">${formatarTempo(stats.media)}</div>
+                        <div class="label">Média por Parada</div>
+                    </div>
+                    <div class="modal-summary-item">
+                        <div class="value">${formatarTempo(stats.maior)}</div>
+                        <div class="label">Maior Período</div>
+                    </div>
+                    <div class="modal-summary-item">
+                        <div class="value">${stats.emAndamento}</div>
+                        <div class="label">Em Andamento</div>
+                    </div>
+                    <div class="modal-summary-item">
+                        <div class="value">${veiculo.totalRegistros}</div>
+                        <div class="label">Total de Registros</div>
+                    </div>
+                </div>
+
+                <h3 style="margin-bottom: 15px; color: #2d3748;">⏱️ Tempo Parado por Ignição</h3>
+                <div class="modal-ignicao-resumo">
+                    <div class="box ligado">
+                        <div class="value">${formatarTempo(stats.tempoLigado)}</div>
+                        <div class="label">🔥 Com Ignição Ligada</div>
+                    </div>
+                    <div class="box desligado">
+                        <div class="value">${formatarTempo(stats.tempoDesligado)}</div>
+                        <div class="label">⛔ Com Ignição Desligada</div>
+                    </div>
+                </div>
+            `;
+
+            if (paradas.length === 0) {
+                html += `<div class="no-data"><p>Nenhuma parada detectada neste veículo.</p></div>`;
+            } else {
                 html += `
-                    <div class="card-item" onclick="openModal('${name}')">
-                        <div class="file-name">
-                            📄 ${name.length > 30 ? name.substring(0, 27) + '...' : name}
-                            <span class="badge">${s.totalEvents} eventos</span>
-                        </div>
-                        <div class="stats-grid">
-                            <div class="stat">
-                                <div class="label">⏱️ Tempo Parado</div>
-                                <div class="value">${stopTime}</div>
-                            </div>
-                            <div class="stat">
-                                <div class="label">🚀 Vel. Máxima</div>
-                                <div class="value">${s.maxSpeed.toFixed(1)} <small>km/h</small></div>
-                            </div>
-                            <div class="stat">
-                                <div class="label">⏳ Tempo em Movimento</div>
-                                <div class="value">${movingTime}</div>
-                            </div>
-                            <div class="stat">
-                                <div class="label">🚗 Vel. Média</div>
-                                <div class="value">${s.avgSpeed.toFixed(1)} <small>km/h</small></div>
-                            </div>
-                        </div>
-                        <div class="click-hint"><span>👆 Clique para relatório completo</span></div>
-                    </div>
-                `;
-            }
-
-            grid.innerHTML = html;
-        }
-
-        function openModal(fileName) {
-            const data = fileData[fileName];
-            if (!data) return;
-
-            const modal = document.getElementById('modalOverlay');
-            const content = document.getElementById('modalContent');
-
-            if (data.error) {
-                content.innerHTML = `
-                    <h2>⚠️ Erro no arquivo</h2>
-                    <p class="subtitle">${fileName}</p>
-                    <div style="background:#fee2e2;padding:20px;border-radius:12px;color:#991b1b;">
-                        <strong>Erro:</strong> ${data.error}
-                    </div>
-                `;
-                modal.classList.add('active');
-                activeModal = fileName;
-                return;
-            }
-
-            const s = data.summary;
-            if (!s) {
-                content.innerHTML = `
-                    <h2>⏳ Processando</h2>
-                    <p class="subtitle">${fileName}</p>
-                    <div style="text-align:center;padding:30px;color:#94a3b8;">
-                        Aguarde o processamento do arquivo...
-                    </div>
-                `;
-                modal.classList.add('active');
-                activeModal = fileName;
-                return;
-            }
-
-            const stopTime = formatDuration(s.stopSeconds);
-            const movingTime = formatDuration(s.movingSeconds);
-            const journeyTime = formatDuration(s.jornadaSegundos);
-
-            const stopComp = getTimeComponents(s.stopSeconds);
-            const movingComp = getTimeComponents(s.movingSeconds);
-            const journeyComp = getTimeComponents(s.jornadaSegundos);
-
-            const recentStops = s.stops ? s.stops.slice(-5).reverse() : [];
-
-            // Localização de Início
-            const inicio = s.inicioLocalizacao;
-            const fim = s.fimLocalizacao;
-
-            content.innerHTML = `
-                <h2>📊 ${s.frota || 'Veículo'} - ${s.placa || 'Sem placa'}</h2>
-                <p class="subtitle">${fileName} • ${s.totalEvents} eventos • ${formatDate(s.jornadaInicio)} até ${formatDate(s.jornadaFim)}</p>
-
-                <div class="modal-stats">
-                    <div class="modal-stat">
-                        <div class="label">⏱️ Tempo Parado Total</div>
-                        <div class="value">${stopTime}</div>
-                        <div class="value" style="font-size:14px;color:#64748b;font-weight:400;">
-                            ${stopComp.hours}h ${stopComp.minutes}min ${stopComp.seconds}s
-                        </div>
-                    </div>
-                    <div class="modal-stat orange">
-                        <div class="label">🚀 Velocidade Máxima</div>
-                        <div class="value">${s.maxSpeed.toFixed(1)} <small>km/h</small></div>
-                    </div>
-                    <div class="modal-stat green">
-                        <div class="label">⏳ Tempo em Movimento</div>
-                        <div class="value">${movingTime}</div>
-                        <div class="value" style="font-size:14px;color:#64748b;font-weight:400;">
-                            ${movingComp.hours}h ${movingComp.minutes}min ${movingComp.seconds}s
-                        </div>
-                    </div>
-                    <div class="modal-stat purple">
-                        <div class="label">🚗 Velocidade Média</div>
-                        <div class="value">${s.avgSpeed.toFixed(1)} <small>km/h</small></div>
-                    </div>
-                    <div class="modal-stat red">
-                        <div class="label">📏 Distância Total</div>
-                        <div class="value">${s.totalDistance.toFixed(1)} <small>km</small></div>
-                    </div>
-                    <div class="modal-stat pink">
-                        <div class="label">📊 Total de Eventos</div>
-                        <div class="value">${s.totalEvents}</div>
-                    </div>
-                </div>
-
-                <!-- LOCALIZAÇÃO DE INÍCIO E FIM -->
-                <div class="modal-section">
-                    <h3>📍 Localização da Jornada</h3>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-                        <div style="background:#f0fdf4;border-radius:12px;padding:14px 16px;border-left:4px solid #16a34a;">
-                            <div style="font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;">🚀 INÍCIO DA JORNADA</div>
-                            <div style="font-size:14px;font-weight:600;color:#1a1a2e;margin-top:4px;">
-                                ${formatDate(inicio?.data)}
-                            </div>
-                            <div style="font-size:13px;color:#1a1a2e;margin-top:4px;">
-                                ${inicio?.endereco || 'Endereço não disponível'}
-                            </div>
-                            <div style="font-size:12px;color:#94a3b8;margin-top:2px;">
-                                📍 ${inicio?.latitude?.toFixed(5) || '--'}, ${inicio?.longitude?.toFixed(5) || '--'}
-                            </div>
-                            <div style="font-size:12px;color:#64748b;margin-top:4px;">
-                                Vel: ${inicio?.velocidade?.toFixed(1) || '--'} km/h • 
-                                Ignição: <span class="status-badge ${inicio?.ignicao === 'Ligado' ? 'ligado' : 'desligado'}">${inicio?.ignicao || '--'}</span>
-                                ${inicio?.hodometro ? `• Hod: ${inicio.hodometro}` : ''}
-                            </div>
-                        </div>
-                        <div style="background:#fef2f2;border-radius:12px;padding:14px 16px;border-left:4px solid #dc2626;">
-                            <div style="font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;">🏁 FIM DA JORNADA</div>
-                            <div style="font-size:14px;font-weight:600;color:#1a1a2e;margin-top:4px;">
-                                ${formatDate(fim?.data)}
-                            </div>
-                            <div style="font-size:13px;color:#1a1a2e;margin-top:4px;">
-                                ${fim?.endereco || 'Endereço não disponível'}
-                            </div>
-                            <div style="font-size:12px;color:#94a3b8;margin-top:2px;">
-                                📍 ${fim?.latitude?.toFixed(5) || '--'}, ${fim?.longitude?.toFixed(5) || '--'}
-                            </div>
-                            <div style="font-size:12px;color:#64748b;margin-top:4px;">
-                                Vel: ${fim?.velocidade?.toFixed(1) || '--'} km/h • 
-                                Ignição: <span class="status-badge ${fim?.ignicao === 'Ligado' ? 'ligado' : 'desligado'}">${fim?.ignicao || '--'}</span>
-                                ${fim?.hodometro ? `• Hod: ${fim.hodometro}` : ''}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- RESUMO DA JORNADA -->
-                <div class="modal-section">
-                    <h3>📋 Resumo Detalhado da Jornada</h3>
-                    <div class="detail-grid">
-                        <div class="detail-item">
-                            <span class="dlabel">Início da Jornada</span>
-                            <span class="dvalue">${formatDate(s.jornadaInicio)}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="dlabel">Fim da Jornada</span>
-                            <span class="dvalue">${formatDate(s.jornadaFim)}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="dlabel">Duração da Jornada</span>
-                            <span class="dvalue">${journeyTime}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="dlabel">Duração (detalhado)</span>
-                            <span class="dvalue">${journeyComp.hours}h ${journeyComp.minutes}min ${journeyComp.seconds}s</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="dlabel">Frota</span>
-                            <span class="dvalue">${s.frota || '--'}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="dlabel">Placa</span>
-                            <span class="dvalue">${s.placa || '--'}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="dlabel">Motorista</span>
-                            <span class="dvalue">${s.motorista || '--'}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="dlabel">Total de Paradas</span>
-                            <span class="dvalue">${s.totalStops || 0}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ÚLTIMO EVENTO -->
-                <div class="modal-section">
-                    <h3>📌 Último Evento</h3>
-                    <div class="detail-grid">
-                        <div class="detail-item">
-                            <span class="dlabel">Data/Hora</span>
-                            <span class="dvalue">${formatDate(s.lastEvent?.data)}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="dlabel">Velocidade</span>
-                            <span class="dvalue">${s.lastEvent?.velocidade?.toFixed(1) || '--'} km/h</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="dlabel">Ignição</span>
-                            <span class="dvalue"><span class="status-badge ${s.lastEvent?.ignicao === 'Ligado' ? 'ligado' : 'desligado'}">${s.lastEvent?.ignicao || '--'}</span></span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="dlabel">Evento</span>
-                            <span class="dvalue">${s.lastEvent?.evento || '--'}</span>
-                        </div>
-                        <div class="detail-item full">
-                            <span class="dlabel">Localização</span>
-                            <span class="dvalue">${s.lastEvent?.endereco || '--'}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="dlabel">Latitude</span>
-                            <span class="dvalue">${s.lastEvent?.latitude?.toFixed(5) || '--'}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="dlabel">Longitude</span>
-                            <span class="dvalue">${s.lastEvent?.longitude?.toFixed(5) || '--'}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="dlabel">Hodômetro</span>
-                            <span class="dvalue">${s.lastEvent?.hodometro || '--'}</span>
-                        </div>
-                    </div>
-                </div>
-
-                ${recentStops.length > 0 ? `
-                <div class="modal-section">
-                    <h3>🛑 Últimas Paradas (${recentStops.length} de ${s.totalStops})</h3>
-                    <div style="overflow-x:auto;border-radius:10px;border:1px solid #e5e7eb;">
-                        <table style="width:100%;border-collapse:collapse;font-size:13px;">
-                            <thead style="background:#f8fafc;">
+                    <h3 style="margin-bottom: 15px; color: #2d3748;">📋 Lista de Paradas</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
                                 <tr>
-                                    <th style="padding:10px 14px;text-align:left;">Início</th>
-                                    <th style="padding:10px 14px;text-align:left;">Fim</th>
-                                    <th style="padding:10px 14px;text-align:left;">Duração</th>
+                                    <th>#</th>
+                                    <th>Início da Parada</th>
+                                    <th>Fim da Parada</th>
+                                    <th>Tempo Parado</th>
+                                    <th>Ignição (Início → Fim)</th>
+                                    <th>Tempo Ligado</th>
+                                    <th>Tempo Desligado</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${recentStops.map(stop => `
-                                    <tr>
-                                        <td style="padding:8px 14px;border-bottom:1px solid #f1f5f9;">${formatDate(stop.inicio)}</td>
-                                        <td style="padding:8px 14px;border-bottom:1px solid #f1f5f9;">${formatDate(stop.fim)}</td>
-                                        <td style="padding:8px 14px;border-bottom:1px solid #f1f5f9;">${formatDuration(stop.duracaoSeg)}</td>
-                                    </tr>
-                                `).join('')}
+                `;
+
+                paradas.forEach((parada, idx) => {
+                    const statusClass = parada.fim === null ? 'badge-blue' : parada.status.class;
+                    const statusLabel = parada.fim === null ? 'Em andamento' : parada.status.label;
+                    const tempoLigado = parada.fim === null ? '—' : formatarTempo(parada.tempoLigado || 0);
+                    const tempoDesligado = parada.fim === null ? '—' : formatarTempo(parada.tempoDesligado || 0);
+
+                    let ignicaoLabel = parada.ignicaoInicio;
+                    if (parada.fim !== null && parada.ignicaoFim !== parada.ignicaoInicio) {
+                        ignicaoLabel += ` → ${parada.ignicaoFim}`;
+                    }
+
+                    html += `
+                        <tr>
+                            <td><strong>${idx + 1}</strong></td>
+                            <td>${formatarData(parada.inicio)}</td>
+                            <td>${parada.fim ? formatarData(parada.fim) : '—'}</td>
+                            <td><strong>${parada.tempoFormatado}</strong></td>
+                            <td><span class="badge ${parada.ignicaoInicio === 'Ligado' ? 'badge-yellow' : 'badge-gray'}">${ignicaoLabel}</span></td>
+                            <td>${tempoLigado}</td>
+                            <td>${tempoDesligado}</td>
+                            <td><span class="badge ${statusClass}">${statusLabel}</span></td>
+                        </tr>
+                    `;
+                });
+
+                html += `
                             </tbody>
                         </table>
                     </div>
-                </div>
-                ` : ''}
-            `;
-
-            modal.classList.add('active');
-            activeModal = fileName;
-        }
-
-        function closeModal(e) {
-            if (e && e.target !== e.currentTarget) return;
-            document.getElementById('modalOverlay').classList.remove('active');
-            activeModal = null;
-        }
-
-        // ============================================================
-        // FILE MANAGEMENT
-        // ============================================================
-        function processFile(file) {
-            const fileName = file.name;
-
-            if (fileData[fileName]) {
-                delete fileData[fileName];
+                `;
             }
 
-            fileData[fileName] = null;
-            renderCards();
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-
-                    const rows = parseExcelData(workbook);
-                    if (!rows || rows.length === 0) {
-                        fileData[fileName] = { error: 'Nenhum dado encontrado na planilha' };
-                        renderCards();
-                        return;
-                    }
-
-                    const result = analyzeData(rows, fileName);
-                    if (result.error) {
-                        fileData[fileName] = { error: result.error };
-                    } else {
-                        fileData[fileName] = result;
-                    }
-                    renderCards();
-
-                } catch (err) {
-                    fileData[fileName] = { error: 'Erro ao processar: ' + err.message };
-                    renderCards();
-                }
-            };
-            reader.readAsArrayBuffer(file);
+            modalContent.innerHTML = html;
+            modalOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
         }
 
-        function clearAllFiles() {
-            for (const key in fileData) {
-                delete fileData[key];
-            }
-            closeModal();
-            renderCards();
+        function fecharModal() {
+            modalOverlay.classList.remove('active');
+            document.body.style.overflow = 'auto';
         }
 
         // ============================================================
-        // DRAG & DROP
+        // EVENTOS
         // ============================================================
-        const dropZone = document.getElementById('dropZone');
-        const fileInput = document.getElementById('fileInput');
 
-        dropZone.addEventListener('dragover', (e) => {
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
-            dropZone.classList.add('dragover');
+            uploadArea.classList.add('dragover');
         });
 
-        dropZone.addEventListener('dragleave', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('dragover');
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
         });
 
-        dropZone.addEventListener('drop', (e) => {
+        uploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
-            dropZone.classList.remove('dragover');
+            uploadArea.classList.remove('dragover');
             const files = e.dataTransfer.files;
-            for (const file of files) {
-                if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
-                    processFile(file);
-                }
+            if (files.length > 0) {
+                processarArquivos(files);
             }
         });
 
-        dropZone.addEventListener('click', () => {
+        uploadBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
             fileInput.click();
         });
 
         fileInput.addEventListener('change', (e) => {
-            const files = e.target.files;
-            for (const file of files) {
-                if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
-                    processFile(file);
-                }
+            if (e.target.files.length > 0) {
+                processarArquivos(e.target.files);
+                fileInput.value = '';
             }
-            fileInput.value = '';
+        });
+
+        clearAllBtn.addEventListener('click', () => {
+            if (veiculosData.length === 0) {
+                mostrarAlerta('Nenhum dado para limpar.', 'info');
+                return;
+            }
+            veiculosData = [];
+            atualizarCards();
+            fecharModal();
+            mostrarAlerta('Todos os dados foram removidos.', 'info');
+        });
+
+        modalClose.addEventListener('click', fecharModal);
+
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) fecharModal();
         });
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeModal();
+            if (e.key === 'Escape') fecharModal();
         });
 
         // ============================================================
         // INICIALIZAÇÃO
         // ============================================================
-        renderCards();
-        console.log('🚛 Sistema de Análise de Rastreamento v5.1 carregado.');
-        console.log('✅ Agora com localização de INÍCIO e FIM da jornada.');
-    </script>
 
+        console.log('🚛 Sistema Multi-Planilhas de Paradas carregado!');
+        console.log('📌 Usando colunas: Data (D) | Velocidade (G) | Ignição (H)');
+        console.log('ℹ️ Aguardando upload de planilhas...');
+        atualizarCards();
+    </script>
 </body>
 </html>
